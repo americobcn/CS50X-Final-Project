@@ -50,7 +50,7 @@ node* new_node(const char *s)
                 clearList(head);
                 exit(EXIT_FAILURE);
             }
-            strcpy(n->year, tokens[i]);
+            n->year = atoi(tokens[i]);
         }
         else if (i == (elementsToScan - 3))
         {
