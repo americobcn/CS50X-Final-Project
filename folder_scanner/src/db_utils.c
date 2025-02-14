@@ -53,7 +53,7 @@ int insertData(node* head, const char* DBName)
     char *sqlBuffer; 
     while (iter != NULL)
     {
-        int ret = asprintf(&sqlBuffer, "INSERT INTO projects (project,client,month,year,path) VALUES ('%s','%s','%s','%s','%s')",
+        int ret = asprintf(&sqlBuffer, "INSERT INTO projects (project,client,month,year,path) VALUES ('%s','%s','%s','%d','%s')",
                             iter->project, iter->client, iter->month, iter->year, iter->path);
         if (ret == -1) {
             printf("Couldn't create SQL Buffer for Inserion\n");
