@@ -24,7 +24,7 @@
 ****************************************************************************************/
 typedef struct node
 {
-    char year[5];
+    int year;
     char month[32];
     char client[NAME_MAX];
     char project[NAME_MAX];
