@@ -32,43 +32,38 @@ int createDataBase(const char* DBName)
 
 
 
+/********************************************************************************/
+/* This function iterates the linked list inserting the nodes into the database */
+/********************************************************************************/
 int insertData(node* head, const char* DBName)
 {
     node* iter = head->next;
-    
     sqlite3* db;
     int rc;
 
     /* Open database */
     rc = sqlite3_open(DBName, &db);
-   
     if( rc != SQLITE_OK) {
         fprintf(stderr, "db_utils: Can't open database: %s\n", sqlite3_errmsg(db));
         return(0);
     }
     
-    
     unsigned long accum = 0, nErrors = 0;
     /*  Construction of the insertion query */
-    char query[512] = "INSERT INTO projects (project,client,month,year,path) VALUES (";
+    char *sqlBuffer; 
     while (iter != NULL)
     {
-        char tmp[512];
-        strcpy(tmp, query);
-        strcat(tmp, "\'");
-        strcat(tmp, iter->project);
-        strcat(tmp, "\',\'");
-        strcat(tmp, iter->client);
-        strcat(tmp, "\',\'");
-        strcat(tmp, iter->month);
-        strcat(tmp, "\',\'");
-        strcat(tmp, iter->year);
-        strcat(tmp, "\',\'");
-        strcat(tmp, iter->path);
-        strcat(tmp, "\');\0");
-
+        int ret = asprintf(&sqlBuffer, "INSERT INTO projects (project,client,month,year,path) VALUES ('%s','%s','%s','%s','%s')",
+                            iter->project, iter->client, iter->month, iter->year, iter->path);
+        if (ret == -1) {
+            printf("Couldn't create SQL Buffer for Inserion\n");
+            free(sqlBuffer);
+            exit(EXIT_FAILURE);
+        }
+    
         /* Execute the insertion query */
-        rc = sqlite3_exec(db, tmp, NULL, 0, NULL);
+        // printf("SQL Buffer: %s\n", sqlBuffer);
+        rc = sqlite3_exec(db, sqlBuffer, NULL, 0, NULL);
         if( rc != SQLITE_OK )
         {
             nErrors++;
@@ -78,14 +73,13 @@ int insertData(node* head, const char* DBName)
         
         accum++;
         iter = iter->next;
+        free(sqlBuffer);
     }
 
     printf("%lu records inserted successfully\n", accum);
     printf("%lu records error produced.\n", nErrors);
-
+    
     sqlite3_close(db);
     
     return accum;
-    
 }
-
