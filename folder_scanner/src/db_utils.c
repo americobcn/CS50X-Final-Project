@@ -12,8 +12,8 @@ int createDataBase(const char* DBName)
    
     if( rc != SQLITE_OK) {
         fprintf(stderr, "db_utils: Can't open database: %s\n", sqlite3_errmsg(db));
-        return EXIT_FAILURE;
-    } 
+        exit(EXIT_FAILURE);
+    }
     
     char* sql = "CREATE TABLE IF NOT EXISTS projects (id INTEGER PRIMARY KEY, project TEXT, client TEXT, month TEXT, year INTEGER, path TEXT);";
 
