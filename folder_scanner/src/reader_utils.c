@@ -237,7 +237,7 @@ bool checkForValidArguments(int argc, char **argv)
         switch (code)
         {
         case 'a':
-            printf("Aborted.\n");
+        printf("Aborted.\n");
             exit(EXIT_SUCCESS);
             break; // Not necesary but ... 
         
@@ -252,14 +252,14 @@ bool checkForValidArguments(int argc, char **argv)
             if (res != 0)
             {
                 printf("Couldn't remove file %s from disk", argv[3]);
-                return EXIT_FAILURE;                
+                exit(EXIT_FAILURE);                
             }
             printf("Succesfully removed %s from disk\n", argv[3]);
             break;            
         
         default:
             printf("Invalid code.\n");
-            return EXIT_SUCCESS;
+            exit(EXIT_SUCCESS);
             break;
         }
     }
