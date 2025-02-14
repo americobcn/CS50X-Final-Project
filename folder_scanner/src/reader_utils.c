@@ -237,8 +237,9 @@ bool checkForValidArguments(int argc, char **argv)
         switch (code)
         {
         case 'a':
-            return EXIT_SUCCESS;
-            break;
+            printf("Aborted.\n");
+            exit(EXIT_SUCCESS);
+            break; // Not necesary but ... 
         
         case 'u':
             /* Update database */
