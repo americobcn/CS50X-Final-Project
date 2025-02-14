@@ -232,7 +232,6 @@ bool checkForValidArguments(int argc, char **argv)
         printf("Press \'u\' to update, \'d\' to delete database or \'a\' to abort: ");
         scanf("%c", &code);
         code = tolower(code);
-        int res = -1;
 
         switch (code)
         {
