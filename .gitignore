@@ -1,0 +1,4 @@
+.DS_Store
+folder_scanner/bin
+folder_scanner/obj
+folder_scanner/projects.db
