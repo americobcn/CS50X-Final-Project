@@ -28,19 +28,19 @@ node* new_node(const char *s)
 
     /*  Need a buffer for strtok() function to parse the path */
     char lineBuffer[PATH_MAX];
-    // memset(lineBuffer, 0, PATH_MAX);
     strcpy(lineBuffer, s);
     
     /*  Store the tokens in an array while using the index i to match subfolders names to node fields */
     /*  Probably could be better but it works */
     int i = 0;
-    char* tokens[64];
-    tokens[i] = strtok(lineBuffer, "/"); // Returns the first token
+    char* tokens[16]; // Array to save tokens
+    char* delimitor = "/";
+    tokens[i] = strtok(lineBuffer, delimitor); // Returns the first token
     i++;
 
-    while ((tokens[i] = strtok(NULL, "/")) != NULL)
+    while ((tokens[i] = strtok(NULL, delimitor)) != NULL)
     {
-        if (i == (elementsToScan - 4)) // 4 is number of tokens of interest (year, month, client and project)
+        if (i == (elementsToScan - 4)) // 4 is the number of tokens of interest (year, month, client and project)
         {
             if(atoi(tokens[i]) == 0)
             {
@@ -88,9 +88,12 @@ void scanPath(const char *rootPath)
     char path[PATH_MAX];
     struct dirent *dirEntry;
     DIR *folder = opendir(rootPath);
-
+    printf("Scannig: %s\n", rootPath);
     // Unable to open directory stream
-    if (!folder) return;
+    // if (folder == NULL) {
+    //     printf("Unable to open directory stream: %s\n", rootPath);
+    //     return;      
+    // };
     
     while ((dirEntry = readdir(folder)) != NULL)
     {
@@ -110,9 +113,7 @@ void scanPath(const char *rootPath)
                     slashCounter++;
                 i++;                            
             }
-            
-            if (slashCounter > elementsToScan) continue;
-            
+                        
             /* Arrived to the last subfolder to scan, perform the insertion */
             if (slashCounter == elementsToScan)
             {
@@ -123,11 +124,12 @@ void scanPath(const char *rootPath)
                 {
                     int pos = singleQuote - path;
                     escapeSingleQuote(path, singleQuote, pos);
-                }
-                printf("Adding: %s\n", path);
+                }                
                 addPathToList(head, path);
+                printf("Added: %s\n", path);
+                continue; // Skip scanning the next subfolder
             }
-
+            printf("\n");
             scanPath(path);
         }
     }
@@ -176,7 +178,7 @@ void printNode(node* n)
   Sqlite3 escape single quote in a diferent way than C. This is necesary 
   to inert strings like "D'Omnion" into text filed database.
 *************************************************************************/
-void escapeSingleQuote(char* p, const char* r, int idx)
+void escapeSingleQuote(char* p, const char* r, int idx) // 
 {
     char lineBuffer[PATH_MAX];
     strncpy(lineBuffer, p, idx);
@@ -243,6 +245,7 @@ bool checkForValidArguments(int argc, char **argv)
         case 'u':
             /* Update database */
             printf("Updating database ...\n");
+            /* TODO */
             break;
         
         case 'd':

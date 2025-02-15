@@ -18,7 +18,7 @@
 #include "reader_utils.h"
 #include "db_utils.h"
 
-#define MAX_FOLDERS_TO_SCAN 32
+#define MAX_FOLDERS_TO_SCAN 64
 
 /* Global vars initialized in reader_utils.c */ 
 extern node* head;
@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
     if (isValid == false)
     {
         printf("Check arguments\n");
-        return EXIT_FAILURE;
+        exit(EXIT_FAILURE);
     }
     
 
@@ -47,25 +47,33 @@ int main(int argc, char *argv[])
     if (head == NULL)  
     {
         printf("Couldn't initialize the linked list\n");
-        return EXIT_FAILURE;
+        exit(EXIT_FAILURE);
     }
 
-    /* Load into foldersBuf the subfolders that will be scanned */
+    /* Load into foldersBuf the subfolders that will be scanned, one for each year */
     char foldersBuf[MAX_FOLDERS_TO_SCAN][PATH_MAX];
+    memset(foldersBuf, 0, sizeof(foldersBuf));
+    // for (int i = 0; i < MAX_FOLDERS_TO_SCAN; i++)
+    // {
+    //     for (int j = 0; j < PATH_MAX; j++)
+    //     {
+    //         foldersBuf[i][j] = '\0';
+    //     }
+    // }
+    
     foldersToScan(argv, MAX_FOLDERS_TO_SCAN, PATH_MAX, foldersBuf);
-
-
+    
     /* Start scanning foldersBuf and add to linked list */
-    for (int i = 0; i < MAX_FOLDERS_TO_SCAN; i++)
+    int i = 0;
+    while (foldersBuf[i][0] != 0)
     {
-       scanPath(foldersBuf[i]);
+        scanPath(foldersBuf[i]);
+        i++;
     }
     
     /***     Database related section   ***/
     int rc;
     int recordsInserted = 0;
-
-
     /* Insert nodes form de linked list into the database */
     
     rc = createDataBase(argv[3]);
@@ -79,7 +87,7 @@ int main(int argc, char *argv[])
 
     /* End elapsed time */
     time(&end_t);
-    printf("Elapsed seconds: %f\n", difftime(end_t, start_t));
+    printf("Elapsed seconds: %.2f\n", difftime(end_t, start_t));
 
 
     /* Clearing memory */

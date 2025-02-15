@@ -3,17 +3,13 @@ EXE = folder_scanner
 
 # C compiler
 CC = clang
-# C++ compiler
-CXX = clang++
+
 # linker
 LD = clang
 
 # C flags
-CFLAGS = -std=c99 -Wall -Wextra -Werror -g
-# C++ flags
-CXXFLAGS = 
-# C/C++ flags
-CPPFLAGS = 
+CFLAGS = -std=c11 -Wall -Wextra -Werror -g 
+
 # dependency-generation flags
 DEPFLAGS = -MMD -MP
 # linker flags
@@ -26,21 +22,17 @@ BIN = bin
 OBJ = obj
 SRC = src
 
-SOURCES := $(wildcard $(SRC)/*.c $(SRC)/*.cc $(SRC)/*.cpp $(SRC)/*.cxx)
+SOURCES := $(wildcard $(SRC)/*.c)
 
 OBJECTS := \
-	$(patsubst $(SRC)/%.c, $(OBJ)/%.o, $(wildcard $(SRC)/*.c)) \
-	$(patsubst $(SRC)/%.cc, $(OBJ)/%.o, $(wildcard $(SRC)/*.cc)) \
-	$(patsubst $(SRC)/%.cpp, $(OBJ)/%.o, $(wildcard $(SRC)/*.cpp)) \
-	$(patsubst $(SRC)/%.cxx, $(OBJ)/%.o, $(wildcard $(SRC)/*.cxx))
+	$(patsubst $(SRC)/%.c, $(OBJ)/%.o, $(wildcard $(SRC)/*.c)) 	
 
 # include compiler-generated dependency rules
 DEPENDS := $(OBJECTS:.o=.d)
 
 # compile C source
 COMPILE.c = $(CC) $(DEPFLAGS) $(CFLAGS) $(CPPFLAGS) -c -o $@
-# compile C++ source
-COMPILE.cxx = $(CXX) $(DEPFLAGS) $(CXXFLAGS) $(CPPFLAGS) -c -o $@
+
 # link objects
 LINK.o = $(LD) $(LDFLAGS) $(LDLIBS) $(OBJECTS) -o $@
 

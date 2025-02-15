@@ -24,7 +24,6 @@ int createDataBase(const char* DBName)
         fprintf(stderr, "db_utils: Can't create table: %s\n", sqlite3_errmsg(db));
     } 
 
-
     sqlite3_close(db);
     
     return rc;

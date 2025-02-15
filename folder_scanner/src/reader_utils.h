@@ -43,7 +43,7 @@ void printList(node* head);
 void clearList(node* head);
 
 bool checkForValidArguments(int argc, char** argv);
-void escapeSingleQuote(char* p, const char* r, int idx);
+void escapeSingleQuote(char* p, const char* r,int idx);
 
 void foldersToScan(char** argv, int m, int n, char buf[m][n]);
 
