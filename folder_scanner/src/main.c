@@ -18,7 +18,7 @@
 #include "reader_utils.h"
 #include "db_utils.h"
 
-#define MAX_FOLDERS_TO_SCAN 64
+#define MAX_FOLDERS_TO_SCAN 32
 
 /* Global vars initialized in reader_utils.c */ 
 extern node* head;
@@ -28,34 +28,39 @@ extern int *elementsToScan;
 /* Main Function */
 int main(int argc, char *argv[])
 {
-    /*  Check for valid arguments to perform the task */
-    bool isValid = checkForValidArguments(argc, argv);
-    if (isValid == false)
+    printf("Main started\n");
+    /*  Check for valid arguments to perform the task */    
+    if (checkForValidArguments(argc, argv) == false)
     {
         printf("Check arguments\n");
         exit(EXIT_FAILURE);
     }
-    
+    printf("Checked arguments\n");
 
-    /* Var to store time used to calculate time consumed by the task */
+    /* Store time to calculate time consumed by the task */
     time_t start_t, end_t;
     time(&start_t);
-
+    printf("Timer seted\n");
 
     /* Init an empty linked list with a dummy head */
+    printf("Initializing Linked List\n");
     head = new_node("");    // head is a global var declared in reader_utils.h
     if (head == NULL)  
     {
         printf("Couldn't initialize the linked list\n");
         exit(EXIT_FAILURE);
     }
+    printf("Initialized Linked List\n");
 
     /* Load into foldersBuf the subfolders that will be scanned, one for each year */
     char foldersBuf[MAX_FOLDERS_TO_SCAN][PATH_MAX];
     memset(foldersBuf, 0, sizeof(foldersBuf));
-    
+    printf("Initialized foldersBuf\n");
+
+    /* Determine and save which folders must be scanned */
     foldersToScan(argv, MAX_FOLDERS_TO_SCAN, PATH_MAX, foldersBuf);
-    
+    printf("Saved folders to be scanned\n");
+
     /* Start scanning foldersBuf and add to linked list */
     int i = 0;
     while (foldersBuf[i][0] != 0)
@@ -67,7 +72,7 @@ int main(int argc, char *argv[])
     /***     Database related section   ***/
     int rc;
     int recordsInserted = 0;
-    /* Insert nodes form de linked list into the database */
+    /* Insert linked list into the database */
     
     rc = createDataBase(argv[3]);
     recordsInserted = insertData(head, argv[3]);
@@ -87,10 +92,9 @@ int main(int argc, char *argv[])
     clearList(head);
 
 
-    /* Chek for leaks */
+    /* Chek for leaks while compiling with XCODE */
     // system("leaks folder_scanner");
 
     return 0;
-    
-    
+        
 }

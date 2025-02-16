@@ -1,5 +1,7 @@
 #include "reader_utils.h"
 
+#define MAX_TOKENS 32
+
 /* Globals vars used in main.c and db_utils.c */
 node* head = NULL;
 int elementsToScan = 0;
@@ -7,7 +9,7 @@ int elementsToScan = 0;
 
 /* Functions definitions */
 void addPathToList(node* head, const char* path)
-{ 
+{   
     node* n = new_node(path);
     n->next = head->next;
     head->next = n;
@@ -19,60 +21,57 @@ node* new_node(const char *s)
     node *n = malloc(sizeof(node));
     if (n == NULL)
     {
-        printf("Could not allocate memory for a new node");
+        perror("Could not allocate memory for a new node");
         exit(EXIT_FAILURE);
     }
     n->next = NULL;
     strcpy(n->path, s);
-
+    
+    /* Are we creating an empty node as Head? */
+    if (strcmp(s, "") == 0) {
+        printf("Head created\n");
+        return n;
+    }
 
     /*  Need a buffer for strtok() function to parse the path */
-    char lineBuffer[PATH_MAX];
-    strcpy(lineBuffer, s);
+    char *lineBuffer = strdup(s);  // Duplicate the s string for strtok()
+    if (lineBuffer == NULL) {
+        perror("Memory allocation failed for path buffer");
+        free(n);
+        exit(EXIT_FAILURE);
+    }
     
     /*  Store the tokens in an array while using the index i to match subfolders names to node fields */
     /*  Probably could be better but it works */
+    int yearIndex = elementsToScan - 4;
+    int monthIndex = elementsToScan - 3;
+    int clientIndex = elementsToScan - 2;
+    int projectIndex = elementsToScan - 1;
+
+    char* tokens[MAX_TOKENS] = {0}; // Array to save tokens
+    const char* delimitor = "/";
+
     int i = 0;
-    char* tokens[16]; // Array to save tokens
-    char* delimitor = "/";
     tokens[i] = strtok(lineBuffer, delimitor); // Returns the first token
     i++;
-
-    while ((tokens[i] = strtok(NULL, delimitor)) != NULL)
-    {
-        if (i == (elementsToScan - 4)) // 4 is the number of tokens of interest (year, month, client and project)
-        {
-            if(atoi(tokens[i]) == 0)
-            {
-                /* Check if the filed 'year' is Ok, if not elementsToScan is not properly set */
-                printf("No valid data for \'year\' field. \"%s\" is not valid.\nQuiting...\n", tokens[i]);
-                printf("Check folder_Level argument, only for fields allowed\n");
-                clearList(head);
-                exit(EXIT_FAILURE);
-            }
-            n->year = atoi(tokens[i]);
-        }
-        else if (i == (elementsToScan - 3))
-        {
-            strcpy(n->month, tokens[i]);
-        }
-        else if (i == (elementsToScan - 2))
-        {
-            strcpy(n->client, tokens[i]);
-        }
-        else if (i == (elementsToScan - 1))
-        {
-            strcpy(n->project, tokens[i]);
-        }
-
+    while ((tokens[i] = strtok(NULL, delimitor)) != NULL) 
         i++;
+    
+    /* Validate year */
+    if (isdigit(tokens[yearIndex][0])) { // tokens[yearIndex] && 
+        n->year = atoi(tokens[yearIndex]);
+    } else {
+        fprintf(stderr, "Invalid year: \"%s\". Exiting...\n", tokens[yearIndex]);
+        free(lineBuffer);
+        clearList(head);
+        exit(EXIT_FAILURE);
     }
 
-    if (head == NULL)
-    {
-        head = n;    
-    }
-
+    strcpy(n->month, tokens[monthIndex]);
+    strcpy(n->client, tokens[clientIndex]);
+    strcpy(n->project, tokens[projectIndex]);
+    
+    free(lineBuffer);
     return n;
 }
 
@@ -85,15 +84,16 @@ and skip scanning unnecesary subfolders.
 ************************************************************************************/
 void scanPath(const char *rootPath)
 {
+    // printf("addPathToList called\n");
     char path[PATH_MAX];
     struct dirent *dirEntry;
     DIR *folder = opendir(rootPath);
     printf("Scannig: %s\n", rootPath);
     // Unable to open directory stream
-    // if (folder == NULL) {
-    //     printf("Unable to open directory stream: %s\n", rootPath);
-    //     return;      
-    // };
+    if (folder == NULL) {
+        perror("Unable to open directory stream\n");
+        return;      
+    };
     
     while ((dirEntry = readdir(folder)) != NULL)
     {
