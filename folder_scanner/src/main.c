@@ -53,13 +53,6 @@ int main(int argc, char *argv[])
     /* Load into foldersBuf the subfolders that will be scanned, one for each year */
     char foldersBuf[MAX_FOLDERS_TO_SCAN][PATH_MAX];
     memset(foldersBuf, 0, sizeof(foldersBuf));
-    // for (int i = 0; i < MAX_FOLDERS_TO_SCAN; i++)
-    // {
-    //     for (int j = 0; j < PATH_MAX; j++)
-    //     {
-    //         foldersBuf[i][j] = '\0';
-    //     }
-    // }
     
     foldersToScan(argv, MAX_FOLDERS_TO_SCAN, PATH_MAX, foldersBuf);
     
