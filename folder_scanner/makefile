@@ -8,7 +8,7 @@ CC = clang
 LD = clang
 
 # C flags
-CFLAGS = -std=c11 -Wall -Wextra -Werror -g 
+CFLAGS = -std=c11 -Wall -Wextra -Werror -Wno-error=unused-but-set-variable -g 
 
 # dependency-generation flags
 DEPFLAGS = -MMD -MP
