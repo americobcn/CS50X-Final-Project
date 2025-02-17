@@ -1,4 +1,5 @@
 #include "reader_utils.h"
+#include <time.h>
 
 #define MAX_TOKENS 32
 
@@ -41,8 +42,7 @@ node* new_node(const char *s)
         exit(EXIT_FAILURE);
     }
     
-    /*  Store the tokens in an array while using the index i to match subfolders names to node fields */
-    /*  Probably could be better but it works */
+    /*  Store the tokens in an array while using the index i to match subfolders names to node fields */    
     int yearIndex = elementsToScan - 4;
     int monthIndex = elementsToScan - 3;
     int clientIndex = elementsToScan - 2;
@@ -84,15 +84,15 @@ and skip scanning unnecesary subfolders.
 ************************************************************************************/
 void scanPath(const char *rootPath)
 {
-    // printf("addPathToList called\n");
     char path[PATH_MAX];
     struct dirent *dirEntry;
     DIR *folder = opendir(rootPath);
-    printf("Scannig: %s\n", rootPath);
+    // printf("Scannig: %s\n", rootPath);
     // Unable to open directory stream
     if (folder == NULL) {
-        perror("Unable to open directory stream\n");
-        return;      
+        perror("Unable to open directory stream");
+        //exit(EXIT_FAILURE);      
+        return;
     };
     
     while ((dirEntry = readdir(folder)) != NULL)
@@ -126,10 +126,10 @@ void scanPath(const char *rootPath)
                     escapeSingleQuote(path, singleQuote, pos);
                 }                
                 addPathToList(head, path);
-                printf("Added: %s\n", path);
+                // printf("Added: %s\n", path);
                 continue; // Skip scanning the next subfolder
             }
-            printf("\n");
+            // printf("\n");
             scanPath(path);
         }
     }
@@ -189,23 +189,23 @@ void escapeSingleQuote(char* p, const char* r, int idx) //
 }
 
 
-bool checkForValidArguments(int argc, char **argv)
+void checkForValidArguments(int argc, char **argv)
 {
     // Check for valid number of arguments
-    if (argc != 4) 
+    if (argc < 4 || argc > 5)
     {
-        printf("usage: %s /path/to/folder folder_level db_path \n", argv[0]);
-        printf("example: %s /Volumes/MediaHdd/projects 7 /Users/user/Dcouments/projects.db\n", argv[0]);
-        return false;
-    }
+        printf("usage: %s /path/to/folder folder_level db_path [u]\n", argv[0]);
+        printf("example create: %s /Volumes/MediaHdd/projects 7 /Users/user/Dcouments/projects.db\n", argv[0]);
+        printf("example update: %s /Volumes/MediaHdd/projects 7 /Users/user/Dcouments/projects.db u\n", argv[0]);
+        exit(EXIT_FAILURE);
+    } 
 
-
-    // Check for subfolder level to scan
+    // Validate subfolder level to scan
     int res = atoi(argv[2]);
     if (res <= 0)
     {
-        printf("level of subfolder must be a positive integer number.\n");
-        return false;
+        printf("Subfolder level must be a positive integer number.\n");
+        exit(EXIT_FAILURE);
     }
 
     elementsToScan = res;
@@ -217,13 +217,13 @@ bool checkForValidArguments(int argc, char **argv)
         printf("Checking if the path is a folder\n");
         if (!S_ISDIR(fileStats.st_mode)) {
             printf("Path is not a folder\n");
-            return  -2;
+            exit(EXIT_FAILURE);
         }
     }
     else 
     {
         printf("Path doesn´t exists\n");
-        return -3;
+        exit(EXIT_FAILURE);
     }
 
     // Check database file
@@ -231,7 +231,14 @@ bool checkForValidArguments(int argc, char **argv)
     if (stat(argv[3], &fileStats) == 0)
     {
         printf("Database already exists.\n");
-        printf("Press \'u\' to update, \'d\' to delete database or \'a\' to abort: ");
+        
+        // Are we updating database?
+        if (argc == 5 && argv[4][0] == 'u')
+        {
+            printf("Updating database\n");
+            return;
+        }
+        printf("Press \'d\' to delete database or \'a\' to abort: ");
         scanf("%c", &code);
         code = tolower(code);
 
@@ -240,13 +247,7 @@ bool checkForValidArguments(int argc, char **argv)
         case 'a':
         printf("Aborted.\n");
             exit(EXIT_SUCCESS);
-            break; // Not necesary but ... 
-        
-        case 'u':
-            /* Update database */
-            printf("Updating database ...\n");
-            /* TODO */
-            break;
+            break; // Not necesary but ...         
         
         case 'd':
             /* Delete database */
@@ -265,7 +266,6 @@ bool checkForValidArguments(int argc, char **argv)
             break;
         }
     }
-    return true;
 }
 
 
@@ -290,4 +290,11 @@ void foldersToScan(char** argv, int m, int n, char buf[m][n])
      
     closedir(folder);
     
+}
+
+int getCurrentYear()
+{
+    time_t t = time(NULL);
+    struct tm tm = *localtime(&t);
+    return tm.tm_year + 1900;
 }

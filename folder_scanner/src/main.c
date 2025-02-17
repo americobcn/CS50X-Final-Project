@@ -2,7 +2,8 @@
     folder_scanner: tool to scan a root folder path, parse the subfolders paths into a struct,
     store the struct as nodes in a linked list and finally persistenly store the linked list 
     into a single table Sqlite3 database.
-    Usage: ./folder_scanner 'Volumes/root/path' subfolder_level '/Volumes/path/to/database.db'
+    Optional last argument 'u' to update the database.
+    Usage: ./folder_scanner 'Volumes/root/path' subfolder_level '/Volumes/path/to/database.db' [u]
     subfolder_level: int that represent the Nth element in the path that is the project name
     Path ex: /Volumes/MediaHD/backups/year/month/client/project/files&subfolders
                 1       2       3     4     5      6      7
@@ -30,11 +31,7 @@ int main(int argc, char *argv[])
 {
     printf("Main started\n");
     /*  Check for valid arguments to perform the task */    
-    if (checkForValidArguments(argc, argv) == false)
-    {
-        printf("Check arguments\n");
-        exit(EXIT_FAILURE);
-    }
+    checkForValidArguments(argc, argv);
     printf("Checked arguments\n");
 
     /* Store time to calculate time consumed by the task */
@@ -57,31 +54,41 @@ int main(int argc, char *argv[])
     memset(foldersBuf, 0, sizeof(foldersBuf));
     printf("Initialized foldersBuf\n");
 
-    /* Determine and save which folders must be scanned */
-    foldersToScan(argv, MAX_FOLDERS_TO_SCAN, PATH_MAX, foldersBuf);
-    printf("Saved folders to be scanned\n");
+    /* Determine which paths should be scanned */
+    if (argc == 5 && argv[4][0] == 'u')
+    { 
+        /* Case update: Determine and save current year path to be scanned if any */
+        sprintf(&foldersBuf[0][0], "%s/%d", argv[1], getCurrentYear());       
+    } else {
+        /* Case New: Determine and save which folders must be scanned */
+        foldersToScan(argv, MAX_FOLDERS_TO_SCAN, PATH_MAX, foldersBuf);
+        printf("Saved folders to be scanned\n");        
+        createDataBase(argv[3]);    
+    }
 
     /* Start scanning foldersBuf and add to linked list */
     int i = 0;
     while (foldersBuf[i][0] != 0)
     {
+        printf("Scanning rootPath: %s\n", foldersBuf[i]);
         scanPath(foldersBuf[i]);
         i++;
     }
-    
-    /***     Database related section   ***/
-    int rc;
+
     int recordsInserted = 0;
+
     /* Insert linked list into the database */
-    
-    rc = createDataBase(argv[3]);
-    recordsInserted = insertData(head, argv[3]);
-    if (recordsInserted == 0)
+    if (argc == 5 && argv[4][0] == 'u')
     {
-        printf("Not records inserted, something went wrong.\nQuiting ...\n");
-        return EXIT_FAILURE;
+        recordsInserted = insertData(head, argv[3], true);   
+    } else {
+        recordsInserted = insertData(head, argv[3], false);
+        if (recordsInserted == 0)
+            {
+                printf("Not records inserted, something went wrong.\nQuiting ...\n");
+                exit(EXIT_FAILURE);                
+            }
     }
-    
 
     /* End elapsed time */
     time(&end_t);

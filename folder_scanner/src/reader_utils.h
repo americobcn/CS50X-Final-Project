@@ -42,9 +42,10 @@ void addPathToList(node* head, const char* path);
 void printList(node* head);
 void clearList(node* head);
 
-bool checkForValidArguments(int argc, char** argv);
+void checkForValidArguments(int argc, char** argv);
 void escapeSingleQuote(char* p, const char* r,int idx);
 
 void foldersToScan(char** argv, int m, int n, char buf[m][n]);
+int getCurrentYear();
 
 #endif

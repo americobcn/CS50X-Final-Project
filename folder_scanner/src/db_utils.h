@@ -17,6 +17,7 @@
 
 /* Database related functions */
 int createDataBase(const char* DBName);
-int insertData(node* head, const char* DBName);
+int insertData(node* head, const char* DBName, bool update);
+int updateDatabase(node* head, const char* DBName, int year);
 
 #endif

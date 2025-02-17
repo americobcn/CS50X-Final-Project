@@ -34,22 +34,42 @@ int createDataBase(const char* DBName)
 /********************************************************************************/
 /* This function iterates the linked list inserting the nodes into the database */
 /********************************************************************************/
-int insertData(node* head, const char* DBName)
+int insertData(node* head, const char* DBName, bool update)
 {
+    unsigned long accum = 0, nErrors = 0;
     node* iter = head->next;
     sqlite3* db;
+    char *sqlBuffer;
     int rc;
 
     /* Open database */
     rc = sqlite3_open(DBName, &db);
     if( rc != SQLITE_OK) {
         fprintf(stderr, "db_utils: Can't open database: %s\n", sqlite3_errmsg(db));
-        return(0);
+        exit(EXIT_FAILURE);
     }
     
-    unsigned long accum = 0, nErrors = 0;
-    /*  Construction of the insertion query */
-    char *sqlBuffer; 
+    sqlite3_exec(db, "BEGIN;", NULL, 0, NULL);
+    /* Delete all records to be updated */
+    if (update) {        
+        int ret = asprintf(&sqlBuffer, "DELETE FROM projects WHERE year='%d'", getCurrentYear());
+        if (ret == -1) {
+            printf("Couldn't create SQL Buffer for update\n");
+            sqlite3_close(db);
+            exit(EXIT_FAILURE);
+        }
+
+        rc = sqlite3_exec(db, sqlBuffer, NULL, 0, NULL);
+        if( rc != SQLITE_OK ) {
+            fprintf(stderr, "db_utils: %s\n", sqlite3_errmsg(db));
+            free(sqlBuffer);
+            sqlite3_exec(db, "ROLLBACK;", NULL, 0, NULL);
+            sqlite3_close(db);
+            exit(EXIT_FAILURE);
+        }                        
+    }
+
+    /*  Insert linked list data into database */
     while (iter != NULL)
     {
         int ret = asprintf(&sqlBuffer, "INSERT INTO projects (project,client,month,year,path) VALUES ('%s','%s','%s','%d','%s')",
@@ -57,6 +77,8 @@ int insertData(node* head, const char* DBName)
         if (ret == -1) {
             printf("Couldn't create SQL Buffer for Inserion\n");
             free(sqlBuffer);
+            sqlite3_exec(db, "ROLLBACK;", NULL, 0, NULL);
+            sqlite3_close(db);
             exit(EXIT_FAILURE);
         }
     
@@ -69,11 +91,12 @@ int insertData(node* head, const char* DBName)
             fprintf(stderr, "db_utils: %s\n", sqlite3_errmsg(db));
             printNode(iter);            
         }
-        
         accum++;
         iter = iter->next;
         free(sqlBuffer);
     }
+    
+    sqlite3_exec(db, "COMMIT;", NULL, 0, NULL);
 
     printf("%lu records inserted successfully\n", accum);
     printf("%lu records error produced.\n", nErrors);
@@ -82,3 +105,5 @@ int insertData(node* head, const char* DBName)
     
     return accum;
 }
+
+
