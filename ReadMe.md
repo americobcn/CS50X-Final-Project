@@ -21,7 +21,7 @@ Path: /Volumes/MacSSD/backups/year/month/client/project/subfolders+files
 
 typedef struct node
 {
-    char year[5];
+    int year;
     char month[32];
     char client[NAME_MAX];
     char project[NAME_MAX];
@@ -43,10 +43,13 @@ For the MacOS app, I added the package [SQlite.swift](https://github.com/stephen
 
 ~~~bash
 cmd:
-./folder_scanner '/path/to/rootfolder' folder_level '/path/to/database'
+./folder_scanner '/path/to/rootfolder' folder_level '/path/to/database' [u]
 
-ex:
+ex create database:
 ./folder_scanner '/Volumes/hdd/users/user/projects' 6 '~/Dcouments/projects.db'
+
+ex update database:
+./folder_scanner '/Volumes/hdd/users/user/projects' 6 '~/Dcouments/projects.db u'
 ~~~
 
 In this particular case, folder_level is 6, because the project name is the sixth element in the path:
@@ -56,7 +59,8 @@ In this particular case, folder_level is 6, because the project name is the sixt
     1        2      3       4      5       6
 ~~~~
 
-If the database doesn't exist, it will be created. If the database exists, you'll be asked to update the database, delete the database or cancel the scan.
+If the database doesn't exist, it will be created. If the database exists, you'll be asked to delete the database or abort the task.
+You can update the database to register new projects or update the older ones for the current year with the optional argument 'u'.
 
 Once the database has been created and the data inserted, a user can search for a project using the MacOS 'Projects' application. The application will search the database and return a list of records matching the search text in the Project or Client column.
 When the user double-clicks on a row representing a project, the project folder is opened in the Finder.
