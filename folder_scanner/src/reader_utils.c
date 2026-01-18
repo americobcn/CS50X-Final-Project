@@ -1,7 +1,7 @@
 #include "reader_utils.h"
 #include <time.h>
 
-#define MAX_TOKENS 32
+#define MAX_TOKENS 64
 
 /* Globals vars used in main.c and db_utils.c */
 node* head = NULL;
@@ -17,61 +17,66 @@ void addPathToList(node* head, const char* path)
 }
 
 
-node* new_node(const char *s)
+node* new_node(const char *path)
 {
     node *n = malloc(sizeof(node));
     if (n == NULL)
     {
-        perror("Could not allocate memory for a new node");
+        fprintf(stderr, "ERROR: Could not allocate memory for new node\n");
         exit(EXIT_FAILURE);
     }
-    n->next = NULL;
-    strcpy(n->path, s);
+    
+    n->next = NULL; 
+    n->month[0] = '\0';
+    n->client[0] = '\0';
+    n->project[0] = '\0';
+    n->path[0] = '\0';
+
     
     /* Are we creating an empty node as Head? */
-    if (strcmp(s, "") == 0) {
+    if (strcmp(path, "") == 0) {
         printf("Head created\n");
         return n;
     }
 
+    
     /*  Need a buffer for strtok() function to parse the path */
-    char *lineBuffer = strdup(s);  // Duplicate the s string for strtok()
-    if (lineBuffer == NULL) {
-        perror("Memory allocation failed for path buffer");
-        free(n);
-        exit(EXIT_FAILURE);
+    char lineBuffer[PATH_MAX];
+    if (path != NULL)
+    {
+        snprintf(lineBuffer, sizeof(lineBuffer), "%s", path);
     }
     
-    /*  Store the tokens in an array while using the index i to match subfolders names to node fields */    
+    /* Calculate indexes of the tokens we are interested in */
     int yearIndex = elementsToScan - 4;
     int monthIndex = elementsToScan - 3;
     int clientIndex = elementsToScan - 2;
     int projectIndex = elementsToScan - 1;
 
-    char* tokens[MAX_TOKENS] = {0}; // Array to save tokens
-    const char* delimitor = "/";
-
+    /*  Store the tokens in an array while using the index i to match subfolders names to node fields */
     int i = 0;
-    tokens[i] = strtok(lineBuffer, delimitor); // Returns the first token
+    char* tokens[MAX_TOKENS];
+    tokens[i] = strtok(lineBuffer, "/"); // Returns the first token
     i++;
-    while ((tokens[i] = strtok(NULL, delimitor)) != NULL) 
+    while ((tokens[i] = strtok(NULL, "/")) != NULL) {
+        // printf("Token %d: %s\n", i, tokens[i]);
         i++;
-    
+    }
+
     /* Validate year */
-    if (isdigit(tokens[yearIndex][0])) { // tokens[yearIndex] && 
+    if (isdigit(tokens[yearIndex][0])) {
         n->year = atoi(tokens[yearIndex]);
     } else {
-        fprintf(stderr, "Invalid year: \"%s\". Exiting...\n", tokens[yearIndex]);
-        free(lineBuffer);
+        fprintf(stderr, "Invalid year: \"%s\". Exiting...\n", tokens[yearIndex]);        
         clearList(head);
         exit(EXIT_FAILURE);
     }
-
-    strcpy(n->month, tokens[monthIndex]);
-    strcpy(n->client, tokens[clientIndex]);
-    strcpy(n->project, tokens[projectIndex]);
     
-    free(lineBuffer);
+    snprintf(n->month, sizeof(n->month), "%s", tokens[monthIndex]);
+    snprintf(n->client, sizeof(n->client), "%s", tokens[clientIndex]);
+    snprintf(n->project, sizeof(n->project), "%s", tokens[projectIndex]);
+    snprintf(n->path, sizeof(n->path), "%s", path);
+    
     return n;
 }
 
@@ -86,15 +91,14 @@ void scanPath(const char *rootPath)
 {
     char path[PATH_MAX];
     struct dirent *dirEntry;
-    DIR *folder = opendir(rootPath);
-    // printf("Scannig: %s\n", rootPath);
+    DIR *folder = opendir(rootPath);    
     // Unable to open directory stream
     if (folder == NULL) {
         perror("Unable to open directory stream");
         //exit(EXIT_FAILURE);      
         return;
-    };
-    
+    };  
+
     while ((dirEntry = readdir(folder)) != NULL)
     {
         if (dirEntry->d_type != DT_DIR) continue;
@@ -116,20 +120,11 @@ void scanPath(const char *rootPath)
                         
             /* Arrived to the last subfolder to scan, perform the insertion */
             if (slashCounter == elementsToScan)
-            {
-                /* Deal with sigle quotes character before insert into database */                
-                char c = '\'';
-                char* singleQuote = strchr(path,c);
-                if (singleQuote != NULL)
-                {
-                    int pos = singleQuote - path;
-                    escapeSingleQuote(path, singleQuote, pos);
-                }                
-                addPathToList(head, path);
-                // printf("Added: %s\n", path);
+            {                
+                addPathToList(head, path);             
                 continue; // Skip scanning the next subfolder
             }
-            // printf("\n");
+            
             scanPath(path);
         }
     }
@@ -172,20 +167,6 @@ void printNode(node* n)
     printf(" Client   %s\n", n->client);
     printf(" Path     %s\n", n->path);
     printf("\n");
-}
-
-/*************************************************************************
-  Sqlite3 escape single quote in a diferent way than C. This is necesary 
-  to inert strings like "D'Omnion" into text filed database.
-*************************************************************************/
-void escapeSingleQuote(char* p, const char* r, int idx) // 
-{
-    char lineBuffer[PATH_MAX];
-    strncpy(lineBuffer, p, idx);
-    strcat(lineBuffer, "\'");
-    strcat(lineBuffer, r);
-    strcat(lineBuffer, "\0");
-    strcpy(p,lineBuffer);
 }
 
 
@@ -291,6 +272,7 @@ void foldersToScan(char** argv, int m, int n, char buf[m][n])
     closedir(folder);
     
 }
+
 
 int getCurrentYear()
 {

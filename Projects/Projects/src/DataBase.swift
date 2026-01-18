@@ -37,12 +37,12 @@ class DataBase {
     
     /*  Variables needed to interact with the database */
     var projects:Table!
-    var id:Expression<Int64>!
-    var project:Expression<String>!
-    var client:Expression<String>!
-    var year:Expression<Int>!
-    var month:Expression<String>!
-    var path:Expression<String>!
+    var id:SQLite.Expression<Int64>!
+    var project:SQLite.Expression<String>!
+    var client:SQLite.Expression<String>!
+    var year:SQLite.Expression<Int>!
+    var month:SQLite.Expression<String>!
+    var path:SQLite.Expression<String>!
     
     /*  Variable to used to pass Sqlite errors to MainViewController */
     var delegateDB: DatabaseControllerDelegate?
@@ -83,18 +83,22 @@ class DataBase {
     }
     
     
-    
-    
     /*  Function called from MVC to query the database, the result of the query is stored in searchResult array */
     func searchInDB(text: String) {
+        if text.isEmpty {
+            searchResult.removeAll()
+            self.rows = 0
+            return
+        }
+        
         if isConected {
             searchResult.removeAll()
             var stringToSearch = text
             
             stringToSearch = "%" + text + "%"
-            let filtered = projects.filter((project.like(stringToSearch, escape: "\'")) || (client.like(stringToSearch)))
-                .order(year.desc, month)
-            
+            let filtered = projects.filter((project.like(stringToSearch, escape: "\'")) ||
+                                           (client.like(stringToSearch))).order(year.desc, month)
+                
             do {
                 searchResult = Array(try (db?.prepare(filtered))!)   // SELECT * FROM "projects" WHERE ...
                 self.rows = searchResult.count
@@ -105,10 +109,10 @@ class DataBase {
             delegateDB?.showAlert(text: "No connection to database\nor invalid database.\nSelect a database")
             print("No DATABASE")
         }
-                
     }
     
     
+    /* Insert path dragged into projects list interface */
     func insertPathInDB(pathToInsert: String) {
         if isConected {
             var insertable: Bool = false

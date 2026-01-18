@@ -19,9 +19,10 @@ class MainViewController: NSViewController, NSTableViewDataSource, NSTableViewDe
     @IBOutlet var mainWindow: NSWindow!
     @IBOutlet weak var projectsView: ProjectsView!
     
-    /*  Variables that sotre yhe connection to a Database located at specified path */
+    /*  Variables that sotre the connection to the Database located at specified path */
     var dataBase: DataBase!
     var path: String!
+    let workspace: NSWorkspace = .shared
     
     /*  Constants used by the table view delegate method to identify which cell view on a table column      */
     /*  need to be filled when the delegate method of the tbale view is called                              */
@@ -66,8 +67,8 @@ class MainViewController: NSViewController, NSTableViewDataSource, NSTableViewDe
         
         /* Change the defalut app name to 'app name: database_name' to provide visual info about the current database been used.     */
         self.view.window?.title = "Projects: " + URL(fileURLWithPath: path).lastPathComponent
-        
     }
+    
     
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -82,8 +83,7 @@ class MainViewController: NSViewController, NSTableViewDataSource, NSTableViewDe
     @IBAction func doubleClicked(_ sender: AnyObject) {
         let data = try! dataBase.searchResult[sender.clickedRow].get(dataBase.path) + "/"
         let url = URL(fileURLWithPath: data)
-        print(url)
-        NSWorkspace.shared.open(url)
+        workspace.open(url)
     }
     
     
@@ -95,7 +95,6 @@ class MainViewController: NSViewController, NSTableViewDataSource, NSTableViewDe
     
     
     /* TableView delegate and datasource methods */
-    
     func numberOfRows(in tableView: NSTableView) -> Int {
         /* databse.rows store the count of items in the array 'seacrhResuts' in the object database */
         return dataBase.rows!
@@ -142,12 +141,14 @@ class MainViewController: NSViewController, NSTableViewDataSource, NSTableViewDe
         return cell
     }
     
+    
     /* Action for the Open Database menu item */
     @IBAction func openDatabase(_ sender: Any) {
         self.selectDB()
         self.tableView.reloadData()
         self.mainWindow.title = "Projects: " + path
     }
+    
     
     /*  func to select and open a database */
     func selectDB() {

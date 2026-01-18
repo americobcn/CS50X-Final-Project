@@ -32,9 +32,8 @@ typedef struct node
     struct node *next;
 } node;
 
-
 /* Functions declarations */
-node* new_node(const char* s);
+node* new_node(const char *path);
 void printNode(node* n);
 
 void scanPath(const char* rootPath);
@@ -43,9 +42,9 @@ void printList(node* head);
 void clearList(node* head);
 
 void checkForValidArguments(int argc, char** argv);
-void escapeSingleQuote(char* p, const char* r,int idx);
 
 void foldersToScan(char** argv, int m, int n, char buf[m][n]);
 int getCurrentYear();
+
 
 #endif
