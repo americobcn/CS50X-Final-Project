@@ -15,7 +15,7 @@ DEPFLAGS = -MMD -MP
 # linker flags
 LDFLAGS = 
 # library flags
-LDLIBS = 
+LDLIBS = -lsqlite3
 
 # build directories
 BIN = bin
@@ -56,14 +56,6 @@ $(BIN):
 $(OBJ)/%.o:	$(SRC)/%.c
 	$(COMPILE.c) $<
 
-$(OBJ)/%.o:	$(SRC)/%.cc
-	$(COMPILE.cxx) $<
-
-$(OBJ)/%.o:	$(SRC)/%.cpp
-	$(COMPILE.cxx) $<
-
-$(OBJ)/%.o:	$(SRC)/%.cxx
-	$(COMPILE.cxx) $<
 
 # force rebuild
 .PHONY: remake
